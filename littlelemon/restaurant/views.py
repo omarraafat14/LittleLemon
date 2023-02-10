@@ -1,14 +1,19 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import *
+from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .serializers import *
 
-
+@api_view()
+@permission_classes([IsAuthenticated])
+# @authentication_classes([TokenAuthentication])
+def msg(request):
+    return Response({"message":"This view is protected"})
 # Create your views here.
 def index(request):
     return render(request, 'index.html', {})
@@ -29,12 +34,13 @@ def index(request):
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
 
 
-class MenuItemView(ListCreateAPIView): 
+class MenuItemView(generics.ListCreateAPIView): 
     serializer_class = MenuSerializer
     def get(self, request):
-        items = Menu.objects.all()
+        items = MenuItem.objects.all()
         serializer = MenuSerializer(items, many=True)
         return Response(serializer.data) # return JSON
 
@@ -46,15 +52,15 @@ class MenuItemView(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SingleMenuItemView(RetrieveUpdateAPIView, DestroyAPIView):
+class SingleMenuItemView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
     serializer_class = MenuSerializer
     def get(self, request, pk):
-        item = Menu.objects.get(pk=pk)
+        item = MenuItem.objects.get(pk=pk)
         serializer = MenuSerializer(item)
         return Response(serializer.data) # return JSON
 
     def delete(self, request, pk):
-        item = Menu.objects.get(pk=pk)
+        item = MenuItem.objects.get(pk=pk)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -63,4 +69,4 @@ class SingleMenuItemView(RetrieveUpdateAPIView, DestroyAPIView):
 class UserViewSet(viewsets.ModelViewSet):
    queryset = User.objects.all()
    serializer_class = UserSerializer
-   permission_classes = [permissions.IsAuthenticated] 
+   permission_classes = [IsAuthenticated] 
